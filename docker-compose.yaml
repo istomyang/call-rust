@@ -1,0 +1,58 @@
+name: call-rust
+version: '3.9'
+
+services:
+  postgres-db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: passwd
+      POSTGRES_DB: call-rust
+    volumes:
+      - type: volume
+        source: db-data
+        target: /var/lib/postgresql/data
+    networks:
+      - network
+
+  mongo-db:
+    image: bitnami/mongodb:latest
+    restart: always
+    environment:
+      MONGODB_USERNAME: user
+      MONGODB_PASSWORD: passwd
+      MONGODB_DATABASE: call-rust
+    volumes:
+      - type: volume
+        source: db-data
+        target: /data/db
+    networks:
+      - network
+
+  rocketmq:
+    image: apache/rocketmq:latest
+    ports:
+      - '9876:9876'
+      - '10909:10909'
+      - '10911:10911'
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms512m
+      - ROCKETMQ_HOME=/opt/rocketmq
+      - ROCKETMQ_LOG_HOME=/opt/rocketmq/logs
+    volumes:
+      - mq-data:/opt/rocketmq/store
+      - mq-logs:/opt/rocketmq/logs
+    networks:
+      - network
+
+volumes:
+  db-data:
+    driver: local
+  mq-data:
+    driver: local
+
+networks:
+  network:
+    driver: bridge
